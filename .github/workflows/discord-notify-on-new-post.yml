@@ -1,0 +1,74 @@
+name: Notify Discord on new posts
+
+on:
+  push:
+    paths:
+      - 'posts/**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find added files under posts/
+        id: find_added
+        run: |
+          echo "Computing added files between $GITHUB_EVENT_BEFORE and $GITHUB_SHA"
+          ADDED=$(git diff --name-status "${GITHUB_EVENT_BEFORE}" "${GITHUB_SHA}" | awk '$1=="A" {print $2}' || true)
+          if [ -z "$ADDED" ]; then
+            ADDED=$(jq -r '.commits[]?.added[]?' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)
+          fi
+          FILTERED=""
+          if [ -n "$ADDED" ]; then
+            while IFS= read -r line; do
+              if [[ "$line" == posts/* ]]; then
+                FILTERED="${FILTERED}${line}"$'\n'
+              fi
+            done <<EOF
+          $ADDED
+          EOF
+          fi
+          FILTERED=$(printf "%s" "$FILTERED" | sed '/^$/d' || true)
+          echo "added<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILTERED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Exit if no new posts added
+        if: ${{ steps.find_added.outputs.added == '' }}
+        run: |
+          echo "No new posts added in this push — exiting."
+
+      - name: Setup Node 18
+        if: ${{ steps.find_added.outputs.added != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install node deps for notifier
+        if: ${{ steps.find_added.outputs.added != '' }}
+        run: npm ci
+        working-directory: .github/scripts
+
+      - name: Notify Discord for each new post
+        if: ${{ steps.find_added.outputs.added != '' }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+          # iterate lines in the added list
+          while IFS= read -r file || [ -n "$file" ]; do
+            if [ -z "$file" ]; then
+              continue
+            fi
+            echo "Processing new file: $file"
+            node .github/scripts/notify-discord.js "$file" "$DISCORD_WEBHOOK" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$GITHUB_SHA"
+          done <<EOF
+          ${{ steps.find_added.outputs.added }}
+          EOF
