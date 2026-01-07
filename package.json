@@ -1,0 +1,8 @@
+{
+  "name": "blogs-indexer",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  }
+}
