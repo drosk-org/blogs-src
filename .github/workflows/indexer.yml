@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
     paths:
       - "posts/**"
+  workflow_dispatch:
 
 jobs:
   indexer:
