@@ -1,15 +1,13 @@
 [
   {
     "slug": "first_post",
-    "post_title": "First Blog",
+    "post_title": "Welcome to Drosk",
     "date": "2026-01-06T00:00:00Z",
     "tags": [
-      "a",
-      "b",
-      "c"
+      "system"
     ],
-    "summary": "Hello World! This is a sample summary",
-    "read_time_seconds": 3,
-    "read_time_human": "3 seconds"
+    "summary": "Our first blog post, welcome! A Hello World?",
+    "read_time_seconds": 14,
+    "read_time_human": "14 seconds"
   }
 ]
