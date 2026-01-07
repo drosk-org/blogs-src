@@ -28,26 +28,20 @@ jobs:
           node << 'EOF'
           const fs = require("fs");
           const matter = require("gray-matter");
-
           const dir = "posts";
           const files = fs.readdirSync(dir).filter(f => f.endsWith(".md"));
-
           const posts = files.map(filename => {
             const raw = fs.readFileSync(`${dir}/${filename}`, "utf8");
             const { data } = matter(raw);
-
             return {
               slug: filename.replace(".md", ""),
-              title: data.title || filename,
+              post_title: data.post_title || "",
               date: data.date || null,
               tags: data.tags || [],
-              summary: data.summary || "",
+              summary: data.summary || ""
             };
           });
-
-          // Sort newest → oldest
           posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
           fs.writeFileSync("index.json", JSON.stringify(posts, null, 2));
           EOF
 
