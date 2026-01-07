@@ -5,11 +5,13 @@ on:
     branches: [ "main" ]
     paths:
       - "posts/**"
+      - "scripts/buildIndex.js"
   workflow_dispatch:
 
 jobs:
   indexer:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,35 +23,16 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install deps
-        run: npm install gray-matter
+      - name: Install dependencies
+        run: npm install
 
       - name: Generate index.json
-        run: |
-          node << 'EOF'
-          const fs = require("fs");
-          const matter = require("gray-matter");
-          const dir = "posts";
-          const files = fs.readdirSync(dir).filter(f => f.endsWith(".md"));
-          const posts = files.map(filename => {
-            const raw = fs.readFileSync(`${dir}/${filename}`, "utf8");
-            const { data } = matter(raw);
-            return {
-              slug: filename.replace(".md", ""),
-              post_title: data.post_title || "",
-              date: data.date || null,
-              tags: data.tags || [],
-              summary: data.summary || ""
-            };
-          });
-          posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-          fs.writeFileSync("index.json", JSON.stringify(posts, null, 2));
-          EOF
+        run: node scripts/buildIndex.js
 
       - name: Commit changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "Blog Indexer Bot"
+            git config user.name "Drosk Blog Indexer Bot"
             git config user.email "bot@drosk.org"
             git add index.json
             git commit -m "Update blog index"
