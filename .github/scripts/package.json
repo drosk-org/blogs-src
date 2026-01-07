@@ -1,0 +1,12 @@
+{
+  "name": "discord-post-notifier",
+  "version": "1.0.0",
+  "description": "Parse new post files and notify Discord",
+  "private": true,
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
