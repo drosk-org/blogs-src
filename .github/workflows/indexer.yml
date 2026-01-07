@@ -27,7 +27,7 @@ jobs:
         run: npm install
 
       - name: Generate index.json
-        run: node scripts/buildIndex.js
+        run: node build_index.js
 
       - name: Commit changes
         run: |
